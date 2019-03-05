@@ -1,8 +1,22 @@
 ---
 
+### Description ###
 # This taskbook helps standarize the way we setup the log directories. It is meant to be included in a playbooks pre_tasks.
 # Currently set to store playbook logs inside your ~/ansibleLogs directory.
 # Requires the {{DIR}} variable to be passed on inclusion for the name of the log directory to prepend.
+
+### Usage ###
+## Add the following block import in the pre_tasks of your playbook
+#
+#  - block: # We use block so that we can apply the 'always' tag to all included tasks.
+#   # The DATE_TIME variable is set in here
+#    - name: Prepare Log Dir
+#      include_tasks: ../common/logsprep.yml # Assuming you have the common/ subdir in your parent dir. If not, amend this accordingly.
+#      vars:
+#        DIR: "YOUR_PLAY_NAME" # Replace "YOUR_PLAY_NAME" with the string you want to prepend in from of the date of your log directory.
+#    tags: always
+#
+## You should now now use "~/ansibleLogs/YOUR_PLAY_NAME-{{DATE_TIME.stdout}}/" in the rest of your playbook as the path you save logfiles into.
 
 - name: Gather date and time
   # We have to use the unix date command because it's not possible to set a variable within a taskbook.
