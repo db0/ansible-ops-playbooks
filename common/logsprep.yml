@@ -1,0 +1,39 @@
+---
+
+# This taskbook helps standarize the way we setup the log directories. It is meant to be included in a playbooks pre_tasks.
+# Currently set to store playbook logs inside your ~/ansibleLogs directory.
+# Requires the {{DIR}} variable to be passed on inclusion for the name of the log directory to prepend.
+
+- name: Gather date and time
+  # We have to use the unix date command because it's not possible to set a variable within a taskbook.
+  # So this way we can use the register to set the variable we need. Unfortunately we still need to keep using .stdout.
+  # We don't use the internal ansible date/time variables as these are based on each host and the minute can change if the tasks gathering takes too long.
+  command: date +%Y-%M-%d_%H%M 
+  register: DATE_TIME 
+  run_once: true
+  delegate_to: localhost
+
+- name: Ensure no previous logs remain
+  file: 
+    path: "~/ansibleLogs/{{DIR}}-{{DATE_TIME.stdout}}"
+    state: absent 
+  changed_when: False
+  delegate_to: localhost
+  run_once: true     
+        
+- name: Put filename of original hostlist in file as reminder
+  lineinfile: 
+    line: "Inventory file: {{inventory_file}}"
+    dest: ~/ansibleLogs/{{DIR}}-{{DATE_TIME.stdout}}/run.inf
+    create: true
+  run_once: true
+  delegate_to: localhost
+  changed_when: false
+ 
+- name: Copy hostlist into our logs dir
+  copy: 
+    content: "{{'\n'.join(ansible_play_hosts_all) }}"
+    dest: ~/ansibleLogs/{{DIR}}-{{DATE_TIME.stdout}}/host.lst
+  run_once: true
+  delegate_to: localhost
+  changed_when: false    
